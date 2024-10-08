@@ -414,7 +414,7 @@ export default defineComponent({
     const recordingButtonText = ref('语音');
     let iatRecorder: any = null;
 
-    const APPID = "e744e845";
+    const APPID = "e744e845";//注意修改为自己的APPID
     const API_SECRET = "填写上科大讯飞KEY";
     const API_KEY = "填写上科大讯飞KEY";
     const YOUR_SSE_ENDPOINT = "http://localhost/v1";
