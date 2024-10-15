@@ -11,37 +11,19 @@
 </template>
 
 <script setup>
-import u13 from '@/assets/u13.png'
-
-import u14 from '@/assets/u14.png'
-
-
 import { useRouter } from 'vue-router'; // 导入 Vue Router
 const router = useRouter(); // 获取 router 实例// 当前为静态页面，无需额外逻辑
 
-const items = [
-  {
-    icon: u13, // Replace with the correct path to the icons
-    title: 'DifyH5',
-    description: 'AI生活咨询，您可打开对话框向我提问',
-  },
-  {
-    icon: u14,
-    title: '政策小百科',
-    description: '政策查询及解答',
-  }
-];
+// 导入配置文件
+import { items } from '@/config/assistantConfig.js';
+
 const clickItem = (item, index) => {
 
-  if (index === 0) {
-    router.push('/chat'); // 跳转到根路由
+  router.push({
+    path: '/chat',
+    query: { title: item.title, description: item.description,APIKey: item.APIKey }
+  });
 
-  }
-  else
-  {
-    router.push('/chat'); // 跳转到根路由
-
-  }
 };
 
 </script>

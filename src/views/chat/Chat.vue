@@ -63,7 +63,9 @@
 
 <script lang="ts">
 import { defineComponent, ref, onMounted, nextTick, onBeforeUnmount, watch, Ref } from 'vue';
-import { useSSE } from '@alova/scene-vue';
+
+// 导入配置文件
+import { APPID, API_SECRET, API_KEY, YOUR_SSE_ENDPOINT } from '@/config/assistantConfig.js';
 
 import { useRouter } from 'vue-router'; // 导入 Vue Router
 const router = useRouter(); // 获取 router 实例// 当前为静态页面，无需额外逻辑
@@ -101,6 +103,9 @@ declare global {
 export default defineComponent({
   name: 'VoiceControl',
   mounted() {
+    console.log(this.$route.query.title);  // 'DifyH5'
+    console.log(this.$route.query.description);  // 'AI生活咨询，您可打开对话框向我提问'
+    console.log(this.$route.query.APIKey);
   },
   methods: {
   },
@@ -263,24 +268,24 @@ export default defineComponent({
 
         if (canvasCtx && waveformCanvas.value) {
           canvasCtx.clearRect(0, 0, waveformCanvas.value.width, waveformCanvas.value.height);
+          const barWidth = 2; // 竖线的宽度更细
+          const barGap = 8;   // 竖线之间的间隔
+          const totalBars = Math.floor(waveformCanvas.value!.width / (barWidth + barGap));
+          const startX = (waveformCanvas.value!.width - totalBars * (barWidth + barGap)) / 2; // 计算居中
+
+          let x = startX;
+
+          for (let i = 0; i < dataArray.length; i += Math.floor(dataArray.length / totalBars)) {
+            const v = dataArray[i] / 128.0;
+            const y = (v * waveformCanvas.value!.height) / 2;
+
+            canvasCtx.fillStyle = '#000';
+            canvasCtx.fillRect(x, waveformCanvas.value!.height / 2 - y / 2, barWidth, y);
+
+            x += barWidth + barGap;
+          }
         } else {
           console.error('Canvas context or waveformCanvas is not initialized');
-        }
-        const barWidth = 2; // 竖线的宽度更细
-        const barGap = 8;   // 竖线之间的间隔
-        const totalBars = Math.floor(waveformCanvas.value!.width / (barWidth + barGap));
-        const startX = (waveformCanvas.value!.width - totalBars * (barWidth + barGap)) / 2; // 计算居中
-
-        let x = startX;
-
-        for (let i = 0; i < dataArray.length; i += Math.floor(dataArray.length / totalBars)) {
-          const v = dataArray[i] / 128.0;
-          const y = (v * waveformCanvas.value!.height) / 2;
-
-          canvasCtx.fillStyle = '#000';
-          canvasCtx.fillRect(x, waveformCanvas.value!.height / 2 - y / 2, barWidth, y);
-
-          x += barWidth + barGap;
         }
       };
 
@@ -414,11 +419,6 @@ export default defineComponent({
     const recordingButtonText = ref('语音');
     let iatRecorder: any = null;
 
-    const APPID = "e744e845";//注意修改为自己的APPID
-    const API_SECRET = "填写上科大讯飞KEY";
-    const API_KEY = "填写上科大讯飞KEY";
-    const YOUR_SSE_ENDPOINT = "http://localhost/v1";
-
     const toggleSpeack = () => {
       console.log('toggleSpeack');
       isRecordingShow.value = true;
@@ -525,7 +525,7 @@ export default defineComponent({
     };
 
     const postData = async () => {
-      const url = 'http://localhost/v1/chat-messages';
+      const url = YOUR_SSE_ENDPOINT + '/chat-messages';
 
       const data = {
         "inputs": {},
