@@ -7,13 +7,13 @@ export const items = [
         icon: u13,
         title: 'DifyH5',
         description: 'AI生活咨询，您可打开对话框向我提问',
-        APIKey: 'app-oKEYRW76oveX5dAfyFvynBfh'
+        APIKey: 'app-oKEYRW76oveX5dAfyFvynBfh' //此APIKey为Dify应用的key
     },
     {
         icon: u14,
         title: '政策小百科',
         description: '政策查询及解答',
-        APIKey: 'app-oKEYRW76oveX5dAfyFvynBfh'
+        APIKey: 'app-oKEYRW76oveX5dAfyFvynBfh'//此APIKey为Dify应用的key
     }
 ];
 
