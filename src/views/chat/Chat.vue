@@ -544,7 +544,7 @@ export default defineComponent({
 
       const headers = {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + 'app-rgewKdvOXgc4cawdiShKp7sY',
+        'Authorization': 'Bearer ' + 'app-oKEYRW76oveX5dAfyFvynBfh',
       };
 
       try {
@@ -560,7 +560,7 @@ export default defineComponent({
           console.error('POST request failed:', response.statusText);
           return;
         }
-        
+
         completeMessage(); // 完成后重置缓冲区ßß
         // 处理流式响应
         const reader = response.body.getReader();
@@ -588,7 +588,12 @@ export default defineComponent({
               if (parsedChunk.event === 'agent_message') {
                 receiveText(parsedChunk.answer, 'bot');
               }
-
+              //处理工作流
+              else if (parsedChunk.event === 'node_finished') {
+                if (parsedChunk.data.outputs.answer) {
+                  receiveText(parsedChunk.data.outputs.answer, 'bot');
+                }
+              }
 
             } catch (err) {
               console.error('Error parsing chunk:', err);
@@ -602,7 +607,7 @@ export default defineComponent({
       } catch (error) {
         console.error('Error during POST request:', error);
       }
-      
+
     };
 
     let messageBuffer = ''; // Buffer to accumulate the received text
