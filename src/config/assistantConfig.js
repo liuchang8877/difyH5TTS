@@ -17,7 +17,7 @@ export const items = [
     }
 ];
 
-export const APPID = "e744e845";//注意修改为自己的科大讯飞TTS APPID
-export const API_SECRET = "NzNmYzZkNDE0ZjJmNTZjNjQyMGM2ZWI5";//注意修改为自己的科大讯飞TTS API_SECRET
-export const API_KEY = "472fb85982b85765712ea7cefc0b7f95";//注意修改为自己的科大讯飞TTS API_KEY
+export const APPID = "";//注意修改为自己的科大讯飞TTS APPID
+export const API_SECRET = "";//注意修改为自己的科大讯飞TTS API_SECRET
+export const API_KEY = "";//注意修改为自己的科大讯飞TTS API_KEY
 export const YOUR_SSE_ENDPOINT = "http://localhost/v1";
