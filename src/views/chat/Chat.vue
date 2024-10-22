@@ -67,8 +67,9 @@ import { defineComponent, ref, onMounted, nextTick, onBeforeUnmount, watch, Ref 
 // 导入配置文件
 import { APPID, API_SECRET, API_KEY, YOUR_SSE_ENDPOINT } from '@/config/assistantConfig.js';
 
-import { useRouter } from 'vue-router'; // 导入 Vue Router
+import { useRouter, useRoute } from 'vue-router'; // 导入 Vue Router
 const router = useRouter(); // 获取 router 实例// 当前为静态页面，无需额外逻辑
+
 
 const displayCode = ref(''); // 显示的编码值
 
@@ -110,6 +111,23 @@ export default defineComponent({
   methods: {
   },
   setup() {
+    const route = useRoute();
+
+    // 检查 route 是否已定义
+    if (!route) {
+      console.error('Route is undefined');
+      return;
+    }
+
+    // 再检查 route.query 是否存在
+    if (!route.query) {
+      console.error('Route query is undefined');
+      return;
+    }
+
+    const apiKey = route.query.APIKey || 'default_key';
+    console.log('APIKey:', apiKey);
+
     // 获取 canvas 元素
     const canvasRef: Ref<HTMLCanvasElement | null> = ref(null);
 
@@ -526,7 +544,6 @@ export default defineComponent({
 
     const postData = async () => {
       const url = YOUR_SSE_ENDPOINT + '/chat-messages';
-
       const data = {
         "inputs": {},
         "query": inputMessage.value,
@@ -544,8 +561,10 @@ export default defineComponent({
 
       const headers = {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + 'app-oKEYRW76oveX5dAfyFvynBfh',
+        'Authorization': 'Bearer ' + apiKey,
       };
+      //app-HLbiRQwvtpeu8uabPAPwqUVW
+      //apiKey
 
       try {
         // 使用 fetch 发送 POST 请求

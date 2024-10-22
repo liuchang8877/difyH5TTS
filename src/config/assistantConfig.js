@@ -5,19 +5,19 @@ import u14 from '@/assets/u14.png';
 export const items = [
     {
         icon: u13,
-        title: 'DifyH5',
-        description: 'AI生活咨询，您可打开对话框向我提问',
-        APIKey: 'app-oKEYRW76oveX5dAfyFvynBfh' //此APIKey为Dify应用的key
+        title: '授权与通知',
+        description: '出入场景的授权与取消授权，并通知消息',
+        APIKey: 'app-hILJDPrW83NhCkotiJOWjBSo' //此APIKey为Dify应用的key
     },
     {
         icon: u14,
-        title: '政策小百科',
-        description: '政策查询及解答',
+        title: '身份规则查询',
+        description: '人员身份转换的规则查询',
         APIKey: 'app-oKEYRW76oveX5dAfyFvynBfh'//此APIKey为Dify应用的key
     }
 ];
 
-export const APPID = "";//注意修改为自己的科大讯飞TTS APPID
-export const API_SECRET = "";//注意修改为自己的科大讯飞TTS API_SECRET
-export const API_KEY = "";//注意修改为自己的科大讯飞TTS API_KEY
+export const APPID = "e744e845";//注意修改为自己的科大讯飞TTS APPID
+export const API_SECRET = "NzNmYzZkNDE0ZjJmNTZjNjQyMGM2ZWI5";//注意修改为自己的科大讯飞TTS API_SECRET
+export const API_KEY = "472fb85982b85765712ea7cefc0b7f95";//注意修改为自己的科大讯飞TTS API_KEY
 export const YOUR_SSE_ENDPOINT = "http://localhost/v1";
