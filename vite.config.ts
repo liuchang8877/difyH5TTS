@@ -33,10 +33,11 @@ export default defineConfig(({ command, mode }) => {
 
 		// 跨域代理
 		server: {
+			https: true,
 			host: '0.0.0.0',
 			proxy: {
 				'/api': {
-					target: 'https://zhiyuejiayuan.id5.cn:10443',
+					target: 'http://localhost/v1',
 					changeOrigin: true,
 					rewrite: (path) => path.replace(/^\/api/, '') // 将匹配到的api替换成''
 				}

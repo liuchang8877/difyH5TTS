@@ -7,7 +7,8 @@
         <div id="result">语音信息：</div>
       </div>
       <img src="../../assets/u13.png" class="avatar" />
-      <span class="app-name">DifyH5</span>
+
+      <span class="app-name">{{ this.$route.query.title }}</span>
 
     </header>
     <!-- 中间消息体 -->
@@ -303,7 +304,7 @@ export default defineComponent({
             x += barWidth + barGap;
           }
         } else {
-          console.error('Canvas context or waveformCanvas is not initialized');
+          //console.error('Canvas context or waveformCanvas is not initialized');
         }
       };
 
@@ -574,6 +575,8 @@ export default defineComponent({
           body: JSON.stringify(data)
         });
 
+        console.log('****** response *****', response)
+
         // 检查响应是否成功
         if (!response.ok) {
           console.error('POST request failed:', response.statusText);
@@ -819,7 +822,7 @@ export default defineComponent({
   line-height: 1.6;
   min-height: 0;
   /* 允许在 flex 布局下正确滚动 */
-  margin-top: 60px;
+  margin-top: 160px;
   margin-bottom: 60px;
 }
 
