@@ -8,9 +8,9 @@ import u203 from '@/assets/u203.png';
 export const items = [
     {
         icon: u201,
-        title: '授权与通知',
-        description: '出入场景的授权与取消授权，并通知消息',
-        APIKey: 'app-hILJDPrW83NhCkotiJOWjBSo' //此APIKey为Dify应用的key
+        title: '知识库',
+        description: '智能客服',
+        APIKey: 'app-3Nh9mCTHArV6QeobOXFyjaiB' //此APIKey为Dify应用的key
     },
     {
         icon: u203,
@@ -31,3 +31,5 @@ export const API_SECRET = "NzNmYzZkNDE0ZjJmNTZjNjQyMGM2ZWI5";//注意修改为�
 export const API_KEY = "472fb85982b85765712ea7cefc0b7f95";//注意修改为自己的科大讯飞TTS API_KEY
 // export const YOUR_SSE_ENDPOINT = "http://192.168.157.153/v1";
 export const YOUR_SSE_ENDPOINT = "/api";
+// export const YOUR_SSE_ENDPOINT = "http://meeting2023.newcapec.cn/v1";
+

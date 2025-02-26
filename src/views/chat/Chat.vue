@@ -544,25 +544,18 @@ export default defineComponent({
     };
 
     const postData = async () => {
-      const url = YOUR_SSE_ENDPOINT + '/chat-messages';
+      const url = YOUR_SSE_ENDPOINT + "/chat-messages";
       const data = {
         "inputs": {},
         "query": inputMessage.value,
         "response_mode": "streaming",
         "conversation_id": "",
-        "user": "abc-123",
-        "files": [
-          {
-            "type": "image",
-            "transfer_method": "remote_url",
-            "url": "https://cloud.dify.ai/logo/logo-site.png"
-          }
-        ]
+        "user": "abc-123"
       };
 
       const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + apiKey,
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + apiKey,
       };
       //app-HLbiRQwvtpeu8uabPAPwqUVW
       //apiKey
@@ -570,24 +563,24 @@ export default defineComponent({
       try {
         // 使用 fetch 发送 POST 请求
         const response = await fetch(url, {
-          method: 'POST',
+          method: "POST",
           headers: headers,
           body: JSON.stringify(data)
         });
 
-        console.log('****** response *****', response)
+        console.log("****** response *****", response)
 
         // 检查响应是否成功
         if (!response.ok) {
-          console.error('POST request failed:', response.statusText);
+          console.error("POST request failed:", response.statusText);
           return;
         }
 
-        completeMessage(); // 完成后重置缓冲区ßß
+        completeMessage(); // 完成后重置缓冲区
         // 处理流式响应
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-        let buffer = '';  // 用于缓冲数据的字符串
+        let buffer = "";  // 用于缓冲数据的字符串
         let done = false;
 
         while (!done) {
@@ -600,34 +593,34 @@ export default defineComponent({
           buffer += chunk;
 
           // 处理 "data:" 前缀的数据块
-          let parts = buffer.split('data: ');
+          let parts = buffer.split("data: ");
           for (let i = 1; i < parts.length; i++) {
             const message = parts[i].trim();  // 获取实际的 JSON 字符串
             try {
               const parsedChunk = JSON.parse(message);
-              console.log('Parsed chunk:', parsedChunk);
+              console.log("Parsed chunk:", parsedChunk);
 
-              if (parsedChunk.event === 'agent_message') {
-                receiveText(parsedChunk.answer, 'bot');
+              if (parsedChunk.event === "agent_message") {
+                receiveText(parsedChunk.answer, "bot");
               }
               //处理工作流
-              else if (parsedChunk.event === 'node_finished') {
+              else if (parsedChunk.event === "node_finished") {
                 if (parsedChunk.data.outputs.answer) {
-                  receiveText(parsedChunk.data.outputs.answer, 'bot');
+                  receiveText(parsedChunk.data.outputs.answer, "bot");
                 }
               }
 
             } catch (err) {
-              console.error('Error parsing chunk:', err);
+              console.error("Error parsing chunk:", err);
             }
           }
           buffer = parts[parts.length - 1];  // 保留最后一个不完整的数据块
         }
 
-        console.log('Stream complete');
+        console.log("Stream complete");
 
       } catch (error) {
-        console.error('Error during POST request:', error);
+        console.error("Error during POST request:", error);
       }
 
     };

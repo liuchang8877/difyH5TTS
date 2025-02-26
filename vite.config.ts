@@ -6,8 +6,12 @@ import fullReload from 'vite-plugin-full-reload';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
-	// 检查process.cwd()路径下.env.develeport.local、.env.development、.env.local、.env这四个环境文件
-	loadEnv(mode, process.cwd());
+	// 加载环境变量
+	const env = loadEnv(mode, process.cwd());
+	const apiTarget = env.VITE_API_TARGET || 'http://localhost:8000/v1';
+	
+	console.log('当前API目标:', apiTarget); // 调试输出
+
 	return {
 		// 静态资源基础路径 base: './' || '',
 		base: '',
@@ -37,9 +41,11 @@ export default defineConfig(({ command, mode }) => {
 			host: '0.0.0.0',
 			proxy: {
 				'/api': {
-					target: 'http://localhost/v1',
+					target: apiTarget, // 使用环境变量中的API目标
 					changeOrigin: true,
-					rewrite: (path) => path.replace(/^\/api/, '') // 将匹配到的api替换成''
+					rewrite: (path) => path.replace(/^\/api/, ''), // 将匹配到的api替换成''
+					secure: false, // 允许无效或自签名证书
+					ws: true, // 支持websocket
 				}
 			},
 			hmr: true, // 默认开启，不需要额外配置
@@ -50,5 +56,5 @@ export default defineConfig(({ command, mode }) => {
 			},
 			timeout: 60000, // 请求超时时间
 		}
-	};
+	}
 });

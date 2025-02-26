@@ -1,0 +1,32 @@
+    const postData = async () => {
+      const url = YOUR_SSE_ENDPOINT + '/chat-messages';
+      const data = {
+        "inputs": {},
+        "query": inputMessage.value,
+        "response_mode": "streaming",
+        "conversation_id": "",
+        "user": "abc-123"
+      };
+
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + apiKey,
+      };
+      //app-HLbiRQwvtpeu8uabPAPwqUVW
+      //apiKey
+
+      try {
+        // 使用 fetch 发送 POST 请求
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(data)
+        });
+
+        console.log('****** response *****', response)
+
+        // 检查响应是否成功
+        if (!response.ok) {
+          console.error('POST request failed:', response.statusText);
+          return;
+        }
