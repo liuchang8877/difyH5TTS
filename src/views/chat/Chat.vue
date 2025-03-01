@@ -29,6 +29,13 @@
             </div>
           </div>
         </div>
+        
+        <!-- 加载动画 -->
+        <div v-if="isLoading" class="loading-animation">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
       </div>
       <!-- 语音控制*/ -->
       <div class="overlay" v-show="isRecordingShow">
@@ -82,8 +89,8 @@ const rippleWidth = ref(100); // 波纹宽度百分比
 let longPressTimer: NodeJS.Timeout | null = null; // 定时器用于检测长按
 let isLongPress = ref(false); // 标记是否为长按
 
-// 滑动判断的阈值，决定是否触发“上滑取消”操作
-const slideUpThreshold = 50; // 调整此值来设置多少距离算为“上滑”
+// 滑动判断的阈值，决定是否触发"上滑取消"操作
+const slideUpThreshold = 50; // 调整此值来设置多少距离算为"上滑"
 
 
 interface Message {
@@ -436,6 +443,7 @@ export default defineComponent({
     const inputMessage = ref('');
     const chatMessages = ref(null);
     const recordingButtonText = ref('语音');
+    const isLoading = ref(false); // 添加加载状态变量
     let iatRecorder: any = null;
 
     const toggleSpeack = () => {
@@ -533,11 +541,10 @@ export default defineComponent({
     const sendMessage = () => {
       if (inputMessage.value.trim()) {
         addMessageUser(inputMessage.value, 'user');
-        //sendDataToServer(inputMessage.value);
-        //setSSlisenter(inputMessage.value);
-        //sendChatMessage('app-rgewKdvOXgc4cawdiShKp7sY');
-        //initializeSSE(); // 初始化SSE
-
+        
+        // 显示加载动画
+        isLoading.value = true;
+        
         // 调用 postData 发送 POST 请求并随后监听 SSE
         postData();
       }
@@ -557,8 +564,6 @@ export default defineComponent({
         "Content-Type": "application/json",
         "Authorization": "Bearer " + apiKey,
       };
-      //app-HLbiRQwvtpeu8uabPAPwqUVW
-      //apiKey
 
       try {
         // 使用 fetch 发送 POST 请求
@@ -573,6 +578,7 @@ export default defineComponent({
         // 检查响应是否成功
         if (!response.ok) {
           console.error("POST request failed:", response.statusText);
+          isLoading.value = false; // 请求失败时隐藏加载动画
           return;
         }
 
@@ -582,6 +588,10 @@ export default defineComponent({
         const decoder = new TextDecoder();
         let buffer = "";  // 用于缓冲数据的字符串
         let done = false;
+        
+        // 创建一个新的消息缓冲区，用于累积bot的回复
+        messageBuffer = '';
+        let hasAddedMessage = false; // 标记是否已经添加了消息
 
         while (!done) {
           // 读取流数据
@@ -596,36 +606,107 @@ export default defineComponent({
           let parts = buffer.split("data: ");
           for (let i = 1; i < parts.length; i++) {
             const message = parts[i].trim();  // 获取实际的 JSON 字符串
+            if (!message) continue; // 跳过空消息
+            
             try {
               const parsedChunk = JSON.parse(message);
               console.log("Parsed chunk:", parsedChunk);
 
-              if (parsedChunk.event === "agent_message") {
-                receiveText(parsedChunk.answer, "bot");
-              }
-              //处理工作流
-              else if (parsedChunk.event === "node_finished") {
-                if (parsedChunk.data.outputs.answer) {
-                  receiveText(parsedChunk.data.outputs.answer, "bot");
+              // 处理不同类型的事件
+              if (parsedChunk.event === "message") {
+                // 处理普通消息
+                if (parsedChunk.answer) {
+                  if (!hasAddedMessage) {
+                    addMessageUser(parsedChunk.answer, "bot");
+                    hasAddedMessage = true;
+                  } else {
+                    // 更新现有消息
+                    updateLastMessage(parsedChunk.answer, "bot");
+                  }
                 }
+              } 
+              else if (parsedChunk.event === "agent_message") {
+                // 直接处理agent消息
+                if (parsedChunk.answer) {
+                  if (!hasAddedMessage) {
+                    addMessageUser(parsedChunk.answer, "bot");
+                    hasAddedMessage = true;
+                  } else {
+                    // 更新现有消息
+                    updateLastMessage(parsedChunk.answer, "bot");
+                  }
+                }
+              }
+              else if (parsedChunk.event === "node_finished") {
+                // 处理节点完成事件，提取answer字段
+                if (parsedChunk.data && parsedChunk.data.outputs && parsedChunk.data.outputs.answer) {
+                  if (!hasAddedMessage) {
+                    addMessageUser(parsedChunk.data.outputs.answer, "bot");
+                    hasAddedMessage = true;
+                  } else {
+                    // 更新现有消息
+                    updateLastMessage(parsedChunk.data.outputs.answer, "bot");
+                  }
+                }
+              }
+              else if (parsedChunk.event === "workflow_finished") {
+                // 工作流完成事件
+                if (parsedChunk.data && parsedChunk.data.outputs && parsedChunk.data.outputs.answer) {
+                  if (!hasAddedMessage) {
+                    addMessageUser(parsedChunk.data.outputs.answer, "bot");
+                    hasAddedMessage = true;
+                  } else {
+                    // 更新现有消息
+                    updateLastMessage(parsedChunk.data.outputs.answer, "bot");
+                  }
+                }
+              }
+              else if (parsedChunk.event === "message_end") {
+                // 消息结束事件
+                isLoading.value = false;
+              }
+              else if (parsedChunk.event === "tts_message") {
+                // 语音消息事件，可以在这里处理音频数据
+                // 如果需要播放音频，可以在这里添加代码
+              }
+              else if (parsedChunk.event === "tts_message_end") {
+                // 语音消息结束事件
               }
 
             } catch (err) {
-              console.error("Error parsing chunk:", err);
+              console.error("Error parsing chunk:", err, "Raw message:", message);
             }
           }
           buffer = parts[parts.length - 1];  // 保留最后一个不完整的数据块
         }
 
         console.log("Stream complete");
+        isLoading.value = false; // 确保流结束时隐藏加载动画
 
       } catch (error) {
         console.error("Error during POST request:", error);
+        isLoading.value = false; // 发生错误时隐藏加载动画
       }
-
     };
 
     let messageBuffer = ''; // Buffer to accumulate the received text
+
+    // 更新最后一条消息的内容
+    const updateLastMessage = (text: string, type: 'user' | 'bot') => {
+      if (messages.value.length > 0 && messages.value[messages.value.length - 1].type === type) {
+        messages.value[messages.value.length - 1].text = text;
+        
+        nextTick(() => {
+          if (chatMessages.value) {
+            const chatContainer = chatMessages.value;
+            chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
+          }
+        });
+      } else {
+        // 如果没有匹配的消息，则添加一个新消息
+        addMessageUser(text, type);
+      }
+    };
 
     const addMessage = (text: string, type: 'user' | 'bot') => {
       if (messages.value.length === 0 || messages.value[messages.value.length - 1].type !== type) {
@@ -634,7 +715,7 @@ export default defineComponent({
       }
 
       // Update the buffer with new text
-      messageBuffer += text;
+      messageBuffer = text; // 直接替换文本，而不是累加
 
       // Update the last message's text with the accumulated buffer
       messages.value[messages.value.length - 1].text = messageBuffer;
@@ -645,14 +726,12 @@ export default defineComponent({
           chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
         }
       });
-
     };
 
     // Example function to reset the buffer when the message is complete
     const finalizeMessage = () => {
       messageBuffer = ''; // Reset the buffer after processing is complete
       inputMessage.value = ''; // 清空输入框
-
     };
 
     // 模拟持续接收消息的调用示例
@@ -722,6 +801,7 @@ export default defineComponent({
       touchStartY,
       touchEndY,
       isLongPress,
+      isLoading, // 暴露加载状态变量给模板
 
 
 
@@ -1105,6 +1185,48 @@ html,
 body {
   touch-action: none;
   /* 禁止所有手势 */
+}
+
+/* 加载动画样式 */
+.loading-animation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 15px;
+  margin: 10px auto;
+}
+
+.loading-animation .dot {
+  width: 10px;
+  height: 10px;
+  margin: 0 5px;
+  background-color: #4a90e2;
+  border-radius: 50%;
+  display: inline-block;
+  animation: bounce 1.5s infinite ease-in-out;
+}
+
+.loading-animation .dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.loading-animation .dot:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.loading-animation .dot:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /*  */
