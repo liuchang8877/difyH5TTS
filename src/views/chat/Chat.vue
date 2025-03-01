@@ -470,11 +470,11 @@ export default defineComponent({
     onMounted(() => {
 
       const scripts = [
-        '../../assets/js/crypto-js.js',
-        '../../assets/js/index.umd.js',
-        '../../assets/js/index.js',
-        '../../assets/js/processor.worker.js',
-        '../../assets/js/processor.worklet.js'
+        './assets/js/crypto-js.js',
+        './assets/js/index.umd.js',
+        './assets/js/index.js',
+        './assets/js/processor.worker.js',
+        './assets/js/processor.worklet.js'
       ];
 
       const loadScript = (src: string): Promise<void> => {
