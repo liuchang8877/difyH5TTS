@@ -691,30 +691,59 @@ export default defineComponent({
               else if (parsedChunk.event === "node_finished") {
                 // 如果节点完成并有输出内容，显示输出
                 if (parsedChunk.data && parsedChunk.data.outputs) {
-                  // 检查输出中是否有文本内容
-                  const outputText = parsedChunk.data.outputs.text || 
-                                    parsedChunk.data.outputs.answer || 
-                                    parsedChunk.data.outputs.content ||
-                                    JSON.stringify(parsedChunk.data.outputs);
-                  
-                  if (outputText) {
-                    receiveText(outputText, "bot");
+                  // 尝试解析复杂的 JSON 结构
+                  try {
+                    const outputs = parsedChunk.data.outputs;
+                    
+                    // 检查是否有 content 字段
+                    if (outputs.content) {
+                      // 如果 content 是字符串，直接显示
+                      if (typeof outputs.content === 'string') {
+                        receiveText(outputs.content, "bot");
+                      } 
+                      // 如果 content 是数组，提取每个项目的 content 字段
+                      else if (Array.isArray(outputs.content)) {
+                        outputs.content.forEach(item => {
+                          if (item && item.content) {
+                            receiveText(item.content, "bot");
+                          }
+                        });
+                      }
+                      // 如果 content 是 JSON 字符串，尝试解析
+                      else if (typeof outputs.content === 'object') {
+                        // 尝试提取嵌套的 content 字段
+                        const extractContent = (obj) => {
+                          if (!obj) return null;
+                          
+                          // 如果对象有 content 数组
+                          if (obj.content && Array.isArray(obj.content)) {
+                            return obj.content.map(item => item.content || '').filter(Boolean).join('\n');
+                          }
+                          
+                          // 直接返回 content 字段
+                          return obj.content || null;
+                        };
+                        
+                        const extractedContent = extractContent(outputs.content);
+                        if (extractedContent) {
+                          receiveText(extractedContent, "bot");
+                        }
+                      }
+                    }
+                  } catch (parseError) {
+                    console.error("Error parsing complex output:", parseError);
+                    // 如果解析失败，尝试使用简单的方式显示
+                    const outputContent = parsedChunk.data.outputs.content;
+                    if (outputContent) {
+                      receiveText(outputContent, "bot");
+                    }
                   }
                 }
               }
               else if (parsedChunk.event === "workflow_finished") {
                 console.log("Workflow 执行完成:", parsedChunk.data.status);
-                // 如果工作流完成并有输出内容，显示输出
-                if (parsedChunk.data && parsedChunk.data.outputs) {
-                  const outputText = parsedChunk.data.outputs.text || 
-                                    parsedChunk.data.outputs.answer || 
-                                    parsedChunk.data.outputs.content ||
-                                    JSON.stringify(parsedChunk.data.outputs);
-                  
-                  if (outputText) {
-                    receiveText(outputText, "bot");
-                  }
-                }
+                // 在 workflow_finished 事件中，我们不再显示内容，因为已经在 node_finished 中显示过了
+                // 只记录工作流完成的状态
               }
               // 处理 TTS 事件 (如果需要)
               else if (parsedChunk.event === "tts_message") {
