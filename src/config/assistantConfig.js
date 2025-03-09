@@ -14,8 +14,8 @@ export const items = [
     },
     {
         icon: u203,
-        title: '专有诊断',
-        description: '专有诊断智能助理',
+        title: '专项问题',
+        description: '专项问题智能助理',
         APIKey: 'app-gje3FPJLaCEc8mlBXO27EAU4'//此APIKey为Dify应用的key
     },
     {
