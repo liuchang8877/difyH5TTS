@@ -10,7 +10,7 @@ export const items = [
         icon: u201,
         title: '个人知识库',
         description: '智能助理',
-        APIKey: 'app-3Nh9mCTHArV6QeobOXFyjaiB' //此APIKey为Dify应用的key
+        APIKey: 'app-Ldb8XC7DRni6UMysWSmWrmGq' //此APIKey为Dify应用的key
     },
     {
         icon: u203,
@@ -26,30 +26,72 @@ export const items = [
     }
 ];
 
-// 确保正确读取环境变量并处理HTTPS
-const API_TARGET = import.meta.env.VITE_API_TARGET || '';
-console.log('Raw API Target:', API_TARGET);
+// 讯飞语音听写 WebAPI 接口参数
+export const APPID = ''; // 在控制台-我的应用-语音听写（流式版）获取
+export const API_SECRET = ''; // 在控制台-我的应用-语音听写（流式版）获取
+export const API_KEY = ''; // 在控制台-我的应用-语音听写（流式版）获取
 
-// 确保使用HTTPS并处理路径
-let apiEndpoint;
-if (API_TARGET) {
-  // 确保使用HTTPS以避免混合内容问题
-  apiEndpoint = API_TARGET.startsWith('https://') 
-    ? API_TARGET 
-    : API_TARGET.replace('http://', 'https://');
+// 确定环境
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+// 登录 API 配置 (使用 8000 端口)
+let loginApiBaseUrl;
+if (isDevelopment) {
+  loginApiBaseUrl = 'http://localhost:8000';
 } else {
-  // 如果没有设置API_TARGET，使用当前域名
-  apiEndpoint = window.location.origin;
+  const apiTarget = import.meta.env.VITE_LOGIN_API_TARGET || '';
+  if (apiTarget) {
+    loginApiBaseUrl = apiTarget;
+  } else {
+    // 如果没有设置环境变量，使用默认的 8000 端口
+    loginApiBaseUrl = window.location.protocol + '//' + window.location.hostname + ':8000';
+  }
 }
 
-// 导出配置
-export const YOUR_SSE_ENDPOINT = apiEndpoint;
-export const APPID = import.meta.env.VITE_APPID || '';
-export const API_SECRET = import.meta.env.VITE_API_SECRET || '';
-export const API_KEY = import.meta.env.VITE_API_KEY || '';
+// 聊天消息 API 配置 (使用默认 80 端口)
+let chatApiBaseUrl;
+if (isDevelopment) {
+  chatApiBaseUrl = 'http://localhost';
+} else {
+  const apiTarget = import.meta.env.VITE_CHAT_API_TARGET || '';
+  if (apiTarget) {
+    chatApiBaseUrl = apiTarget;
+  } else {
+    // 如果没有设置环境变量，使用默认的 80 端口
+    chatApiBaseUrl = window.location.protocol + '//' + window.location.hostname;
+  }
+}
 
-console.log('Final API Endpoint:', YOUR_SSE_ENDPOINT);
+// 导出 API 端点
+export const LOGIN_ENDPOINT = `${loginApiBaseUrl}/login`;
+export const YOUR_SSE_ENDPOINT = `${chatApiBaseUrl}/v1`;
 
-// export const YOUR_SSE_ENDPOINT = "http://192.168.157.153/v1";
-// export const YOUR_SSE_ENDPOINT = "http://meeting2023.newcapec.cn/v1";
+console.log('登录 API 端点:', LOGIN_ENDPOINT);
+console.log('聊天 API 端点:', YOUR_SSE_ENDPOINT);
+
+export const AUTH_TOKEN_KEY = 'userInfo';
+
+// 检查用户是否已登录
+export const isAuthenticated = () => {
+  const userInfo = localStorage.getItem(AUTH_TOKEN_KEY);
+  return !!userInfo;
+};
+
+// 获取用户信息
+export const getUserInfo = () => {
+  const userInfo = localStorage.getItem(AUTH_TOKEN_KEY);
+  return userInfo ? JSON.parse(userInfo) : null;
+};
+
+// 获取访问令牌
+export const getAccessToken = () => {
+  const userInfo = getUserInfo();
+  return userInfo ? userInfo.access_token : null;
+};
+
+// 登出
+export const logout = () => {
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+  window.location.href = '#/login';
+};
 

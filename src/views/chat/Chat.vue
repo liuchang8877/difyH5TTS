@@ -9,7 +9,11 @@
       <img src="../../assets/u13.png" class="avatar" />
 
       <span class="app-name">{{ this.$route.query.title }}</span>
-
+      
+      <!-- 添加退出登录按钮 -->
+      <div class="header-right">
+        <button class="logout-button" @click="logout">退出</button>
+      </div>
     </header>
     <!-- 中间消息体 -->
     <div class="chat-interface">
@@ -66,7 +70,16 @@
 import { defineComponent, ref, onMounted, nextTick, onBeforeUnmount, watch, Ref } from 'vue';
 
 // 导入配置文件
-import { APPID, API_SECRET, API_KEY, YOUR_SSE_ENDPOINT } from '@/config/assistantConfig.js';
+import { 
+  APPID, 
+  API_SECRET, 
+  API_KEY, 
+  YOUR_SSE_ENDPOINT, 
+  isAuthenticated, 
+  getUserInfo, 
+  getAccessToken, 
+  logout as logoutUser 
+} from '@/config/assistantConfig.js';
 
 import { useRouter, useRoute } from 'vue-router'; // 导入 Vue Router
 const router = useRouter(); // 获取 router 实例// 当前为静态页面，无需额外逻辑
@@ -82,8 +95,8 @@ const rippleWidth = ref(100); // 波纹宽度百分比
 let longPressTimer: NodeJS.Timeout | null = null; // 定时器用于检测长按
 let isLongPress = ref(false); // 标记是否为长按
 
-// 滑动判断的阈值，决定是否触发“上滑取消”操作
-const slideUpThreshold = 50; // 调整此值来设置多少距离算为“上滑”
+// 滑动判断的阈值，决定是否触发"上滑取消"操作
+const slideUpThreshold = 50; // 调整此值来设置多少距离算为"上滑"
 
 
 interface Message {
@@ -108,11 +121,18 @@ export default defineComponent({
     console.log(this.$route.query.title);  // 'DifyH5'
     console.log(this.$route.query.description);  // 'AI生活咨询，您可打开对话框向我提问'
     console.log(this.$route.query.APIKey);
+    
+    // 检查用户是否已登录
+    if (!isAuthenticated()) {
+      // 如果未登录，重定向到登录页面
+      this.$router.push('/login');
+    }
   },
   methods: {
   },
   setup() {
     const route = useRoute();
+    const router = useRouter();
 
     // 检查 route 是否已定义
     if (!route) {
@@ -126,7 +146,19 @@ export default defineComponent({
       return;
     }
 
-    const apiKey = route.query.APIKey || 'default_key';
+    // 检查用户是否已登录
+    if (!isAuthenticated()) {
+      // 如果未登录，重定向到登录页面
+      router.push('/login');
+      return;
+    }
+
+    const userInfo = getUserInfo();
+    const accessToken = getAccessToken();
+    const knowledgeId = userInfo?.knowledge_id;
+    const userId = userInfo?.user?.user_id || 'anonymous';
+
+    const apiKey = route.query.APIKey || accessToken || 'default_key';
     console.log('APIKey:', apiKey);
 
     // 获取 canvas 元素
@@ -456,7 +488,12 @@ export default defineComponent({
       isRecording.value = !isRecording.value;
     };
     const clickBack = () => {
-      window.location.assign('#/home');
+      router.push('/home');
+    };
+
+    const logout = () => {
+      // 使用 assistantConfig.js 中的 logout 函数
+      logoutUser();
     };
 
     onMounted(() => {
@@ -544,21 +581,40 @@ export default defineComponent({
     };
 
     const postData = async () => {
-      const url = YOUR_SSE_ENDPOINT + "/chat-messages";
+      // 使用 Workflow API 端点
+      const url = YOUR_SSE_ENDPOINT + "/workflows/run";
+      
+      // 确保从路由参数中获取正确的 API Key
+      const currentApiKey = route.query.APIKey as string;
+      console.log('当前使用的 API Key:', currentApiKey);
+      
+      // 获取用户信息和 knowledge_id
+      const currentUserInfo = getUserInfo();
+      const currentKnowledgeId = currentUserInfo?.knowledge_id;
+      
+      console.log('当前用户信息:', currentUserInfo);
+      console.log('当前知识库 ID:', currentKnowledgeId);
+      
       const data = {
-        "inputs": {},
-        "query": inputMessage.value,
+        // 在 inputs 对象中添加 query 参数和 knowledge_id
+        "inputs": {
+          "query": inputMessage.value,  // 将用户输入作为 query 参数传递
+          "knowledge_id": currentKnowledgeId || "" // 添加知识库 ID
+        },
         "response_mode": "streaming",
-        "conversation_id": "",
-        "user": "abc-123"
+        "user": userId || "anonymous"
       };
 
+      console.log('请求数据:', JSON.stringify(data));
+
+      // 确保 Authorization 头部正确设置
       const headers = {
         "Content-Type": "application/json",
-        "Authorization": "Bearer " + apiKey,
+        "Authorization": "Bearer " + currentApiKey,
       };
-      //app-HLbiRQwvtpeu8uabPAPwqUVW
-      //apiKey
+      
+      console.log('发送 Workflow 请求到:', url);
+      console.log('使用授权令牌:', currentApiKey);
 
       try {
         // 使用 fetch 发送 POST 请求
@@ -568,11 +624,34 @@ export default defineComponent({
           body: JSON.stringify(data)
         });
 
-        console.log("****** response *****", response)
+        console.log("响应状态:", response.status, response.statusText);
 
         // 检查响应是否成功
         if (!response.ok) {
-          console.error("POST request failed:", response.statusText);
+          console.error("POST request failed:", response.status, response.statusText);
+          
+          // 尝试解析错误响应
+          try {
+            const errorData = await response.json();
+            console.error("错误详情:", errorData);
+            
+            if (errorData.message) {
+              addMessageUser(`请求失败: ${errorData.message}`, "bot");
+            } else if (response.status === 401) {
+              addMessageUser("授权失败：API Key 无效或已过期，请检查您的凭证。", "bot");
+            } else if (response.status === 400) {
+              addMessageUser("请求参数错误，请检查输入格式。", "bot");
+            } else {
+              addMessageUser(`请求失败 (${response.status}): ${response.statusText}`, "bot");
+            }
+          } catch (parseError) {
+            // 如果无法解析错误响应
+            if (response.status === 401) {
+              addMessageUser("授权失败：API Key 无效或已过期，请检查您的凭证。", "bot");
+            } else {
+              addMessageUser(`请求失败 (${response.status}): ${response.statusText}`, "bot");
+            }
+          }
           return;
         }
 
@@ -596,22 +675,61 @@ export default defineComponent({
           let parts = buffer.split("data: ");
           for (let i = 1; i < parts.length; i++) {
             const message = parts[i].trim();  // 获取实际的 JSON 字符串
+            if (!message) continue;
+            
             try {
               const parsedChunk = JSON.parse(message);
               console.log("Parsed chunk:", parsedChunk);
 
-              if (parsedChunk.event === "agent_message") {
-                receiveText(parsedChunk.answer, "bot");
+              // 处理不同类型的事件
+              if (parsedChunk.event === "workflow_started") {
+                console.log("Workflow 开始执行:", parsedChunk.workflow_run_id);
+              } 
+              else if (parsedChunk.event === "node_started") {
+                console.log("节点开始执行:", parsedChunk.data.title);
               }
-              //处理工作流
               else if (parsedChunk.event === "node_finished") {
-                if (parsedChunk.data.outputs.answer) {
-                  receiveText(parsedChunk.data.outputs.answer, "bot");
+                // 如果节点完成并有输出内容，显示输出
+                if (parsedChunk.data && parsedChunk.data.outputs) {
+                  // 检查输出中是否有文本内容
+                  const outputText = parsedChunk.data.outputs.text || 
+                                    parsedChunk.data.outputs.answer || 
+                                    parsedChunk.data.outputs.content ||
+                                    JSON.stringify(parsedChunk.data.outputs);
+                  
+                  if (outputText) {
+                    receiveText(outputText, "bot");
+                  }
                 }
+              }
+              else if (parsedChunk.event === "workflow_finished") {
+                console.log("Workflow 执行完成:", parsedChunk.data.status);
+                // 如果工作流完成并有输出内容，显示输出
+                if (parsedChunk.data && parsedChunk.data.outputs) {
+                  const outputText = parsedChunk.data.outputs.text || 
+                                    parsedChunk.data.outputs.answer || 
+                                    parsedChunk.data.outputs.content ||
+                                    JSON.stringify(parsedChunk.data.outputs);
+                  
+                  if (outputText) {
+                    receiveText(outputText, "bot");
+                  }
+                }
+              }
+              // 处理 TTS 事件 (如果需要)
+              else if (parsedChunk.event === "tts_message") {
+                // 这里可以处理语音合成消息
+                console.log("收到 TTS 消息");
+              }
+              else if (parsedChunk.event === "tts_message_end") {
+                console.log("TTS 消息结束");
+              }
+              else if (parsedChunk.event === "ping") {
+                console.log("收到 ping 事件");
               }
 
             } catch (err) {
-              console.error("Error parsing chunk:", err);
+              console.error("Error parsing chunk:", err, "Raw message:", message);
             }
           }
           buffer = parts[parts.length - 1];  // 保留最后一个不完整的数据块
@@ -621,8 +739,9 @@ export default defineComponent({
 
       } catch (error) {
         console.error("Error during POST request:", error);
+        // 添加错误消息显示
+        addMessageUser("抱歉，发生了网络错误，请检查您的网络连接后重试。", "bot");
       }
-
     };
 
     let messageBuffer = ''; // Buffer to accumulate the received text
@@ -722,6 +841,7 @@ export default defineComponent({
       touchStartY,
       touchEndY,
       isLongPress,
+      logout,
 
 
 
@@ -951,23 +1071,17 @@ button:hover {
 
 .toggle-icon {
   width: 30px;
-  /* 根据需要调整大小 */
   height: 30px;
-  background: url('../../assets/voice.png') no-repeat center;
+  background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAAsTAAALEwEAmpwYAAABpElEQVR4nO2WTU7CQBTHf0hMjCewLtl5A+MNvIEn0CPoEVh5A4/gEYwncOkRWHkDbnADXRh1gTF5ZpJHQmn7ZloTF/6TJu3Me/N+/c+bTweOOCwywAngAXPgB/gEHoFLYK9uAEngBZgBYsln4A7o1EXsAhNgIcRj4AZIAw1ZE3JvLPeM5d2JfFM5MQs8A1vgHugZfBvAFfAm/rZ8Y6VuYgv4kgVDoCXPW8AjsJL7Q4tvLd9+CjFrJXaAD1kwkN0ZsgfcAp/i82Dwt+XbgcW3FmILeJfJfVGZkTgvPpkCfZzHt2/xr0RsAW8yMWfYVQZIiY8mZXz7Fv9KxLlMGlh2lQEy4qNxGV/Lv7SdOJAJWcOuMkBefDQo46v5lybOZELRsKsMUBcfjcr4av6liTOZUDLsKgO0xEfjMr6af2niVCaUDbvKAF3x0bSMr+Zfmtg8Yl2LXWWAoWxYN+xq/qWJJ1KQdCy7ygAJ8dG4jK/mX5r4WgoSx7CrDGCK0rSMr+Zfmtj8O9XlOLXlmLbl+LfltyMu/3ZE5d/ukP/tfjnid/ULdR7KHXbach4AAAAASUVORK5CYII=') no-repeat center;
   background-size: cover;
   border: none;
   cursor: pointer;
-  /* z-index: 10;
-  /* 设置更高的 z-index */
-  /* position: relative; */
-  /* 确保按钮层级正常 */
 }
 
 .toggle-icon-send {
   width: 30px;
-  /* 根据需要调整大小 */
   height: 30px;
-  background: url('../../assets/send.png') no-repeat center;
+  background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAAsTAAALEwEAmpwYAAABFUlEQVR4nO3WMUoDQRTG8Z8RLLQQBAvtPIBgYSd4Aa/gBbyBYGFhYWEjeAJP4A28gIVgYWMhCBYWIlgEH0xgWTabnZ3ZJpB8MMy+9/a/O/PezBBCCKH/6OAYj3jDJy5wiMn/Drb4wCp2MJWqvYZXnKGZJ9jGPT6xnzF/Hw94wWyWYBMXeJcU1QrWcS0p3FqR4CZOJe/xbsb8BVxJCr1WJHgdN5KzXcmYP4cLSaFXiwQv4UZyZ9sZ8+dwLin0SpHgOZxJzmwtY/4sTiSFXi4SPI1jyZmtZMyfwZGk0EtFgqdwKDmz5Yz5TRxICr1YJLiBfUmhFzLmt3AneY7zRYIH2ZL8bvuSH0/uYBd3OJXzHYcQQpjQF5JtU05Wrj1pAAAAAElFTkSuQmCC') no-repeat center;
   background-size: cover;
   border: none;
   cursor: pointer;
@@ -975,16 +1089,11 @@ button:hover {
 
 .toggle-icon-key {
   width: 30px;
-  /* 根据需要调整大小 */
   height: 30px;
-  background: url('../../assets/key.png') no-repeat center;
+  background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAAsTAAALEwEAmpwYAAABpElEQVR4nO2WTU7CQBTHf0hMjCewLtl5A+MNvIEn0CPoEVh5A4/gEYwncOkRWHkDbnADXRh1gTF5ZpJHQmn7ZloTF/6TJu3Me/N+/c+bTweOOCwywAngAXPgB/gEHoFLYK9uAEngBZgBYsln4A7o1EXsAhNgIcRj4AZIAw1ZE3JvLPeM5d2JfFM5MQs8A1vgHugZfBvAFfAm/rZ8Y6VuYgv4kgVDoCXPW8AjsJL7Q4tvLd9+CjFrJXaAD1kwkN0ZsgfcAp/i82Dwt+XbgcW3FmILeJfJfVGZkTgvPpkCfZzHt2/xr0RsAW8yMWfYVQZIiY8mZXz7Fv9KxLlMGlh2lQEy4qNxGV/Lv7SdOJAJWcOuMkBefDQo46v5lybOZELRsKsMUBcfjcr4av6liTOZUDLsKgO0xEfjMr6af2niVCaUDbvKAF3x0bSMr+Zfmtg8Yl2LXWWAoWxYN+xq/qWJJ1KQdCy7ygAJ8dG4jK/mX5r4WgoSx7CrDGCK0rSMr+Zfmtj8O9XlOLXlmLbl+LfltyMu/3ZE5d/ukP/tfjnid/ULdR7KHXbach4AAAAASUVORK5CYII=') no-repeat center;
   background-size: cover;
   border: none;
   cursor: pointer;
-  /* z-index: 10; */
-  /* 设置更高的 z-index */
-  /* position: relative; */
-  /* 确保按钮层级正常 */
 }
 
 .talk-button {
@@ -1108,4 +1217,25 @@ body {
 }
 
 /*  */
+
+.header-right {
+  display: flex;
+  align-items: center;
+  position: absolute;
+  right: 10px;
+}
+
+.logout-button {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #4a93e5;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+.logout-button:hover {
+  background-color: rgba(74, 147, 229, 0.1);
+}
 </style>
