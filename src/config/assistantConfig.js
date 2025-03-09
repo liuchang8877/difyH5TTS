@@ -8,28 +8,48 @@ import u203 from '@/assets/u203.png';
 export const items = [
     {
         icon: u201,
-        title: '知识库',
-        description: '智能客服',
+        title: '个人知识库',
+        description: '智能助理',
         APIKey: 'app-3Nh9mCTHArV6QeobOXFyjaiB' //此APIKey为Dify应用的key
     },
     {
         icon: u203,
-        title: '身份规则查询',
-        description: '人员身份转换的规则查询',
-        APIKey: 'app-65r1OYxOSxGfGsP6XkBg987X'//此APIKey为Dify应用的key
+        title: '专有诊断',
+        description: '专有诊断智能助理',
+        APIKey: 'app-gje3FPJLaCEc8mlBXO27EAU4'//此APIKey为Dify应用的key
     },
     {
         icon: u202,
-        title: '身份规则新增',
-        description: '人员身份转换的规则增加',
+        title: '全面报告',
+        description: '全面报告智能助理',
         APIKey: 'app-BpGVf8Mh8NyJYCtq9oYnomJi'//此APIKey为Dify应用的key
     }
 ];
 
-export const APPID = "e744e845";//注意修改为自己的科大讯飞TTS APPID
-export const API_SECRET = "NzNmYzZkNDE0ZjJmNTZjNjQyMGM2ZWI5";//注意修改为自己的科大讯飞TTS API_SECRET
-export const API_KEY = "472fb85982b85765712ea7cefc0b7f95";//注意修改为自己的科大讯飞TTS API_KEY
+// 确保正确读取环境变量并处理HTTPS
+const API_TARGET = import.meta.env.VITE_API_TARGET || '';
+console.log('Raw API Target:', API_TARGET);
+
+// 确保使用HTTPS并处理路径
+let apiEndpoint;
+if (API_TARGET) {
+  // 确保使用HTTPS以避免混合内容问题
+  apiEndpoint = API_TARGET.startsWith('https://') 
+    ? API_TARGET 
+    : API_TARGET.replace('http://', 'https://');
+} else {
+  // 如果没有设置API_TARGET，使用当前域名
+  apiEndpoint = window.location.origin;
+}
+
+// 导出配置
+export const YOUR_SSE_ENDPOINT = apiEndpoint;
+export const APPID = import.meta.env.VITE_APPID || '';
+export const API_SECRET = import.meta.env.VITE_API_SECRET || '';
+export const API_KEY = import.meta.env.VITE_API_KEY || '';
+
+console.log('Final API Endpoint:', YOUR_SSE_ENDPOINT);
+
 // export const YOUR_SSE_ENDPOINT = "http://192.168.157.153/v1";
-export const YOUR_SSE_ENDPOINT = "/api";
 // export const YOUR_SSE_ENDPOINT = "http://meeting2023.newcapec.cn/v1";
 
