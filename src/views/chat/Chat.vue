@@ -1101,7 +1101,7 @@ button:hover {
 .toggle-icon {
   width: 30px;
   height: 30px;
-  background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAAsTAAALEwEAmpwYAAABpElEQVR4nO2WTU7CQBTHf0hMjCewLtl5A+MNvIEn0CPoEVh5A4/gEYwncOkRWHkDbnADXRh1gTF5ZpJHQmn7ZloTF/6TJu3Me/N+/c+bTweOOCwywAngAXPgB/gEHoFLYK9uAEngBZgBYsln4A7o1EXsAhNgIcRj4AZIAw1ZE3JvLPeM5d2JfFM5MQs8A1vgHugZfBvAFfAm/rZ8Y6VuYgv4kgVDoCXPW8AjsJL7Q4tvLd9+CjFrJXaAD1kwkN0ZsgfcAp/i82Dwt+XbgcW3FmILeJfJfVGZkTgvPpkCfZzHt2/xr0RsAW8yMWfYVQZIiY8mZXz7Fv9KxLlMGlh2lQEy4qNxGV/Lv7SdOJAJWcOuMkBefDQo46v5lybOZELRsKsMUBcfjcr4av6liTOZUDLsKgO0xEfjMr6af2niVCaUDbvKAF3x0bSMr+Zfmtg8Yl2LXWWAoWxYN+xq/qWJJ1KQdCy7ygAJ8dG4jK/mX5r4WgoSx7CrDGCK0rSMr+Zfmtj8O9XlOLXlmLbl+LfltyMu/3ZE5d/ukP/tfjnid/ULdR7KHXbach4AAAAASUVORK5CYII=') no-repeat center;
+  background: url('../../assets/images/voice.png') no-repeat center;
   background-size: cover;
   border: none;
   cursor: pointer;
@@ -1110,7 +1110,7 @@ button:hover {
 .toggle-icon-send {
   width: 30px;
   height: 30px;
-  background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAAsTAAALEwEAmpwYAAABFUlEQVR4nO3WMUoDQRTG8Z8RLLQQBAvtPIBgYSd4Aa/gBbyBYGFhYWEjeAJP4A28gIVgYWMhCBYWIlgEH0xgWTabnZ3ZJpB8MMy+9/a/O/PezBBCCKH/6OAYj3jDJy5wiMn/Drb4wCp2MJWqvYZXnKGZJ9jGPT6xnzF/Hw94wWyWYBMXeJcU1QrWcS0p3FqR4CZOJe/xbsb8BVxJCr1WJHgdN5KzXcmYP4cLSaFXiwQv4UZyZ9sZ8+dwLin0SpHgOZxJzmwtY/4sTiSFXi4SPI1jyZmtZMyfwZGk0EtFgqdwKDmz5Yz5TRxICr1YJLiBfUmhFzLmt3AneY7zRYIH2ZL8bvuSH0/uYBd3OJXzHYcQQpjQF5JtU05Wrj1pAAAAAElFTkSuQmCC') no-repeat center;
+  background: url('../../assets/images/send.png') no-repeat center;
   background-size: cover;
   border: none;
   cursor: pointer;
@@ -1119,7 +1119,7 @@ button:hover {
 .toggle-icon-key {
   width: 30px;
   height: 30px;
-  background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAAsTAAALEwEAmpwYAAABpElEQVR4nO2WTU7CQBTHf0hMjCewLtl5A+MNvIEn0CPoEVh5A4/gEYwncOkRWHkDbnADXRh1gTF5ZpJHQmn7ZloTF/6TJu3Me/N+/c+bTweOOCwywAngAXPgB/gEHoFLYK9uAEngBZgBYsln4A7o1EXsAhNgIcRj4AZIAw1ZE3JvLPeM5d2JfFM5MQs8A1vgHugZfBvAFfAm/rZ8Y6VuYgv4kgVDoCXPW8AjsJL7Q4tvLd9+CjFrJXaAD1kwkN0ZsgfcAp/i82Dwt+XbgcW3FmILeJfJfVGZkTgvPpkCfZzHt2/xr0RsAW8yMWfYVQZIiY8mZXz7Fv9KxLlMGlh2lQEy4qNxGV/Lv7SdOJAJWcOuMkBefDQo46v5lybOZELRsKsMUBcfjcr4av6liTOZUDLsKgO0xEfjMr6af2niVCaUDbvKAF3x0bSMr+Zfmtg8Yl2LXWWAoWxYN+xq/qWJJ1KQdCy7ygAJ8dG4jK/mX5r4WgoSx7CrDGCK0rSMr+Zfmtj8O9XlOLXlmLbl+LfltyMu/3ZE5d/ukP/tfjnid/ULdR7KHXbach4AAAAASUVORK5CYII=') no-repeat center;
+  background: url('../../assets/images/keyboard.png') no-repeat center;
   background-size: cover;
   border: none;
   cursor: pointer;
